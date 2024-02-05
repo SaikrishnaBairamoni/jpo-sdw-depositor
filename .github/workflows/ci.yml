@@ -7,29 +7,30 @@ on:
     
 jobs:
   jpo-sdw-depositor:
-   runs-on: ubuntu-latest
-   container:
-     image: openjdk:21-jdk-slim-buster
-     options: --user root
-   steps:
-     - name: Checkout ${{ github.event.repository.name }}
-       uses: actions/checkout@v4
-     - name: Set up Maven
-       uses: stCarolas/setup-maven@v4.5
-       with:
-        maven-version: 3.9.6
-     - name: Build
-       run: |
-         cd $GITHUB_WORKSPACE
-         ls -ls && pwd
-         mvn -e -X clean org.jacoco:jacoco-maven-plugin:prepare-agent package
-         mvn -e -X clean org.jacoco:jacoco-maven-plugin:report package
-     - name: Archive code coverage results
-       uses: actions/upload-artifact@v4
-       with:
-         name: jpo-sdw-depositor
-         path: /__w/jpo-sdw-depositor/jpo-sdw-depositor/target 
-         if-no-files-found: error
+    runs-on: ubuntu-latest
+    container:
+      # Use an image that matches the JDK version used in your Dockerfile as closely as possible
+      image: eclipse-temurin:21-jdk-alpine
+      options: --user root
+    steps:
+      - name: Checkout ${{ github.event.repository.name }}
+        uses: actions/checkout@v4
+      - name: Set up Maven
+        uses: stCarolas/setup-maven@v4.5
+        with:
+          maven-version: 3.8 # Match the Maven version used in your Dockerfile
+      - name: Build
+        run: |
+          cd $GITHUB_WORKSPACE
+          ls -la && pwd
+          # Simplify Maven commands to match those used in your Docker build, ensuring consistency
+          mvn clean package -DskipTests
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v4
+        with:
+          name: jpo-sdw-depositor
+          path: /__w/jpo-sdw-depositor/jpo-sdw-depositor/target 
+          if-no-files-found: error
   sonar:
     needs: [jpo-sdw-depositor]
     runs-on: ubuntu-latest
@@ -43,10 +44,6 @@ jobs:
         with:
           name: jpo-sdw-depositor
           path: home/runner/work/jpo-sdw-depositor/jpo-sdw-depositor/target     
-      - name: Find jacoco.xml
-        shell: bash
-        run: |
-          find "$GITHUB_WORKSPACE" -name "jacoco.xml"  
       - name: Setup SonarScanner
         uses: warchant/setup-sonar-scanner@v7
       - name: Generate sonar properties file
@@ -68,4 +65,4 @@ jobs:
         with:
           sonar-properties-path: /tmp/sonar-scanner.properties
           sonar-token: ${{ secrets.SONAR_TOKEN }}
-          working-dir: $GITHUB_WORKSPACE                 
+          working-dir: $GITHUB_WORKSPACE
