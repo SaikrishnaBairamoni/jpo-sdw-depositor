@@ -18,7 +18,7 @@ jobs:
       - name: Set up Maven
         uses: stCarolas/setup-maven@v4.5
         with:
-          maven-version: 3.8 # Match the Maven version used in your Dockerfile
+          maven-version: 3.9.6 
       - name: Build
         run: |
           cd $GITHUB_WORKSPACE
