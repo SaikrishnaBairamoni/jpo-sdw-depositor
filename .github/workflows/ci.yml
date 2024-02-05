@@ -22,15 +22,21 @@ jobs:
       - name: Build
         run: |
           cd $GITHUB_WORKSPACE
-          ls -la && pwd
-          # Simplify Maven commands to match those used in your Docker build, ensuring consistency
-          mvn clean package -DskipTests
+          mvn clean package -Dmaven.test.skip=true
+      # - name: Archive code coverage results
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: jpo-sdw-depositor
+      #     path: /__w/jpo-sdw-depositor/jpo-sdw-depositor/target 
+      #     if-no-files-found: error
+      - name: Run tests with JaCoCo coverage
+        run: mvn test jacoco:report
+  
       - name: Archive code coverage results
         uses: actions/upload-artifact@v4
         with:
-          name: jpo-sdw-depositor
-          path: /__w/jpo-sdw-depositor/jpo-sdw-depositor/target 
-          if-no-files-found: error
+          name: code-coverage-report
+          path: ${GITHUB_WORKSPACE}/target/site/jacoco          
   sonar:
     needs: [jpo-sdw-depositor]
     runs-on: ubuntu-latest
@@ -42,8 +48,8 @@ jobs:
       - name: Download code coverage results
         uses: actions/download-artifact@v4
         with:
-          name: jpo-sdw-depositor
-          path: home/runner/work/jpo-sdw-depositor/jpo-sdw-depositor/target     
+          name: code-coverage-report
+          path: ${GITHUB_WORKSPACE}/target/site/jacoco
       - name: Setup SonarScanner
         uses: warchant/setup-sonar-scanner@v7
       - name: Generate sonar properties file
