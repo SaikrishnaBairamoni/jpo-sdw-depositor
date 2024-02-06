@@ -24,19 +24,16 @@ jobs:
           cd $GITHUB_WORKSPACE
           mvn -e -X clean org.jacoco:jacoco-maven-plugin:prepare-agent package
           mvn -e -X clean org.jacoco:jacoco-maven-plugin:report package
-    
+      - name: Find jacoco.xml
+        shell: bash
+        run: |
+          find "$GITHUB_WORKSPACE" -name "jacoco.xml" 
+
       - name: Upload JaCoCo Report
         uses: actions/upload-artifact@v2
         with:
           name: code-coverage-report
           path: ./target/site/jacoco/jacoco.xml 
-
-      - name: File type finder action
-        id: ftf
-        uses: ab185508/file-type-finder@main
-        with:      
-            path: "$GITHUB_WORKSPACE"
-            type: "jacoco.xml"
           
   sonar:
     needs: [jpo-sdw-depositor]
