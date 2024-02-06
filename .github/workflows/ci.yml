@@ -19,24 +19,25 @@ jobs:
         uses: stCarolas/setup-maven@v4.5
         with:
           maven-version: 3.9.6 
-      - name: Build
+      - name: Build and test with JaCoCo coverage
         run: |
           cd $GITHUB_WORKSPACE
-          mvn clean package -Dmaven.test.skip=true
-      # - name: Archive code coverage results
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: jpo-sdw-depositor
-      #     path: /__w/jpo-sdw-depositor/jpo-sdw-depositor/target 
-      #     if-no-files-found: error
-      - name: Run tests with JaCoCo coverage
-        run: mvn test jacoco:report
-  
-      - name: Archive code coverage results
-        uses: actions/upload-artifact@v4
+          mvn -e -X clean org.jacoco:jacoco-maven-plugin:prepare-agent package
+          mvn -e -X clean org.jacoco:jacoco-maven-plugin:report package
+    
+      - name: Upload JaCoCo Report
+        uses: actions/upload-artifact@v2
         with:
           name: code-coverage-report
-          path: ${GITHUB_WORKSPACE}/target/site/jacoco          
+          path: ./target/site/jacoco/jacoco.xml 
+
+      - name: File type finder action
+        id: ftf
+        uses: ab185508/file-type-finder@main
+        with:      
+            path: "$GITHUB_WORKSPACE"
+            type: "jacoco.xml"
+          
   sonar:
     needs: [jpo-sdw-depositor]
     runs-on: ubuntu-latest
@@ -45,11 +46,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0   
-      - name: Download code coverage results
-        uses: actions/download-artifact@v4
+      - name: Download JaCoCo Report
+        uses: actions/download-artifact@v2
         with:
           name: code-coverage-report
-          path: ${GITHUB_WORKSPACE}/target/site/jacoco
+        
       - name: Setup SonarScanner
         uses: warchant/setup-sonar-scanner@v7
       - name: Generate sonar properties file
